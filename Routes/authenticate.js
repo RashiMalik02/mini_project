@@ -11,6 +11,10 @@ const authRouter = express.Router();
 authRouter.post('/register', async (req , res) => {
     let {name, email , password} = req.body;
 
+    if (!password) {
+    return res.status(400).json({ msg: "Password is required" });
+    }
+
     const passwordHash = await bcrypt.hash(password, 5);
     try {
         await userModel.create({
@@ -38,11 +42,11 @@ authRouter.post('/login', async(req,res) => {
             email: email
         })
         if(!user) {
-            res.status(403).json({
+            return res.status(403).json({
                 msg: "user not found"
             })
         }
-        const matchedPass = bcrypt.compare(password, user.passwordHash);
+        const matchedPass = await bcrypt.compare(password, user.passwordHash);
 
         if(matchedPass) {
             const token = jwt.sign({
